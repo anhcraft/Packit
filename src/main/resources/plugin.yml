@@ -2,10 +2,10 @@ name: Packit
 version: ${project.version}
 main: dev.anhcraft.packit.Packit
 api-version: "1.13"
+depend: [CraftKit]
 authors: [anhcraft]
 description: ${project.description}
 website: https://anhcraft.dev/
-depend: [CraftKit]
 commands:
   packit:
     aliases:
