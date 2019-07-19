@@ -3,7 +3,6 @@ package dev.anhcraft.packit;
 import dev.anhcraft.craftkit.cb_common.kits.nbt.CompoundTag;
 import dev.anhcraft.craftkit.cb_common.kits.nbt.ListTag;
 import dev.anhcraft.craftkit.common.lang.annotation.RequiredCleaner;
-import dev.anhcraft.craftkit.kits.chat.ActionBar;
 import dev.anhcraft.craftkit.kits.chat.Chat;
 import dev.anhcraft.craftkit.utils.ItemUtil;
 import org.bukkit.Material;
@@ -20,7 +19,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +30,7 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
     private static final Map<Player, ItemStack[]> INV = new HashMap<>();
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args){
         if (sender instanceof Player) {
             if (sender.hasPermission("packit.admin")) {
                 var p = (Player) sender;
@@ -67,13 +66,7 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
                         if(tag != null) {
                             var pack = tag.get("packit", ListTag.class);
                             if(pack != null) {
-                                var items = pack.getValue();
-                                for (var item : items) {
-                                    var x = ((CompoundTag) item).save(new ItemStack(Material.APPLE, 1));
-                                    if (p.getInventory().firstEmpty() == -1)
-                                        p.getWorld().dropItemNaturally(p.getLocation(), x);
-                                    else p.getInventory().addItem(x);
-                                }
+                                unpack(p, pack);
                                 chat.message(p, "&aUnpacked your item!");
                                 return true;
                             }
@@ -89,6 +82,16 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
             } else chat.message(sender, "&cYou do not have permission to execute the command!");
         } else chat.message(sender, "&cThis command only for in-game players");
         return true;
+    }
+
+    private void unpack(Player p, ListTag pack) {
+        var items = pack.getValue();
+        for (var item : items) {
+            var x = ((CompoundTag) item).save(new ItemStack(Material.APPLE, 1));
+            if (p.getInventory().firstEmpty() == -1)
+                p.getWorld().dropItemNaturally(p.getLocation(), x);
+            else p.getInventory().addItem(x);
+        }
     }
 
     @Override
@@ -113,13 +116,7 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
                     if (p.hasPermission("packit.use")) {
                         hand.setAmount(hand.getAmount() - 1);
                         p.getInventory().setItemInMainHand(hand);
-                        var items = pack.getValue();
-                        for (var item : items) {
-                            var x = ((CompoundTag) item)
-                                    .save(new ItemStack(Material.APPLE, 1));
-                            if (p.getInventory().firstEmpty() == -1) p.getWorld().dropItemNaturally(p.getLocation(), x);
-                            else p.getInventory().addItem(x);
-                        }
+                        unpack(p, pack);
                         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 5f, 1f);
                     } else chat.message(p, "&cYou do not have permission to open this package!");
                 }
@@ -129,8 +126,7 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
 
     @EventHandler
     public void close(InventoryCloseEvent e) {
-        if (e.getPlayer() instanceof Player && e.getInventory().getTitle().equals("Packit Editor")) {
-            if (e.getInventory().getContents() == null) return;
+        if (e.getPlayer() instanceof Player && e.getView().getTitle().equals("Packit Editor")) {
             INV.put((Player) e.getPlayer(), e.getInventory().getContents());
         }
     }
