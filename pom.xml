@@ -6,7 +6,7 @@
 
     <groupId>dev.anhcraft</groupId>
     <artifactId>Packit</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
 
     <name>Packit</name>
@@ -33,20 +33,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <release>11</release>
-                    <source>11</source>
-                    <target>11</target>
-                    <compilerArgs>
-                        <arg>-Xlint:-requires-transitive-automatic</arg>
-                    </compilerArgs>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.ow2.asm</groupId>
-                        <artifactId>asm</artifactId>
-                        <version>7.1</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
         <resources>
@@ -68,7 +57,7 @@
         </repository>
         <repository>
             <id>anhcraft-repo</id>
-            <url>https://anhcraft.dev:7554/repository/mvn/</url>
+            <url>https://repo.anhcraft.dev/repository/mvn/</url>
         </repository>
     </repositories>
 
@@ -82,7 +71,7 @@
         <dependency>
             <groupId>dev.anhcraft</groupId>
             <artifactId>craftkit.spigot</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.5</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

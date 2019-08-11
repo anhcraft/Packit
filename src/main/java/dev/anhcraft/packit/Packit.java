@@ -2,7 +2,7 @@ package dev.anhcraft.packit;
 
 import dev.anhcraft.craftkit.cb_common.kits.nbt.CompoundTag;
 import dev.anhcraft.craftkit.cb_common.kits.nbt.ListTag;
-import dev.anhcraft.craftkit.common.lang.annotation.RequiredCleaner;
+import dev.anhcraft.craftkit.cb_common.kits.nbt.NBTTag;
 import dev.anhcraft.craftkit.kits.chat.Chat;
 import dev.anhcraft.craftkit.utils.ItemUtil;
 import org.bukkit.Material;
@@ -17,23 +17,25 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class Packit extends JavaPlugin implements CommandExecutor, Listener {
-    private static final Chat chat = new Chat("&e[Packit] ");
-    @RequiredCleaner
-    private static final Map<Player, ItemStack[]> INV = new HashMap<>();
+    private final Chat chat = new Chat("&e[Packit] ");
+    private final Map<Player, ItemStack[]> INV = new HashMap<>();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args){
         if (sender instanceof Player) {
             if (sender.hasPermission("packit.admin")) {
-                var p = (Player) sender;
+                Player p = (Player) sender;
                 if(args.length == 0){
                     chat.message(sender, "&f/packit: show all commands");
                     chat.message(sender, "&f/packit pack: to pack the item you are holding");
@@ -41,14 +43,14 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
                     chat.message(sender, "&f/packit editor: to open the editor");
                     chat.message(sender, "&aAliases: /pi, /pack");
                 } else if(args[0].equals("pack")){
-                    var hand = p.getInventory().getItemInMainHand();
+                    @NotNull ItemStack hand = p.getInventory().getItemInMainHand();
                     if (!ItemUtil.isNull(hand)) {
-                        var items = INV.get(p);
+                        ItemStack[] items = INV.get(p);
                         if(items != null) {
-                            var nbt = CompoundTag.of(hand);
-                            var tag = nbt.getOrCreateDefault("tag", CompoundTag.class);
-                            var pack = new ListTag();
-                            for(var item : items){
+                            CompoundTag nbt = CompoundTag.of(hand);
+                            CompoundTag tag = nbt.getOrCreateDefault("tag", CompoundTag.class);
+                            ListTag pack = new ListTag();
+                            for(ItemStack item : items){
                                 if(ItemUtil.isNull(item)) continue;
                                 pack.getValue().add(CompoundTag.of(item));
                             }
@@ -59,12 +61,12 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
                         } else chat.message(p, "&cPlease put your items first! Use the command /packit editor");
                     } else chat.message(p, "&cPlease hold your item!");
                 } else if(args[0].equals("unpack")){
-                    var hand = p.getInventory().getItemInMainHand();
+                    @NotNull ItemStack hand = p.getInventory().getItemInMainHand();
                     if (!ItemUtil.isNull(hand)) {
-                        var nbt = CompoundTag.of(hand);
-                        var tag = nbt.get("tag", CompoundTag.class);
+                        CompoundTag nbt = CompoundTag.of(hand);
+                        @Nullable CompoundTag tag = nbt.get("tag", CompoundTag.class);
                         if(tag != null) {
-                            var pack = tag.get("packit", ListTag.class);
+                            @Nullable ListTag pack = tag.get("packit", ListTag.class);
                             if(pack != null) {
                                 unpack(p, pack);
                                 chat.message(p, "&aUnpacked your item!");
@@ -74,8 +76,8 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
                         chat.message(p, "&cThis item is not a package created by Packit!");
                     } else chat.message(p, "&cPlease hold your item!");
                 } else if(args[0].equals("editor")){
-                    var items = INV.get(p);
-                    var inv = getServer().createInventory(null, 54, "Packit Editor");
+                    ItemStack[] items = INV.get(p);
+                    @NotNull Inventory inv = getServer().createInventory(null, 54, "Packit Editor");
                     if(items != null) inv.setContents(items);
                     p.openInventory(inv);
                 }
@@ -85,9 +87,9 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
     }
 
     private void unpack(Player p, ListTag pack) {
-        var items = pack.getValue();
-        for (var item : items) {
-            var x = ((CompoundTag) item).save(new ItemStack(Material.APPLE, 1));
+        List<NBTTag> items = pack.getValue();
+        for (NBTTag item : items) {
+            ItemStack x = ((CompoundTag) item).save(new ItemStack(Material.APPLE, 1));
             if (p.getInventory().firstEmpty() == -1)
                 p.getWorld().dropItemNaturally(p.getLocation(), x);
             else p.getInventory().addItem(x);
@@ -101,16 +103,16 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
 
     @EventHandler
     public void openGift(PlayerInteractEvent e) {
-        var p = e.getPlayer();
+        @NotNull Player p = e.getPlayer();
         if (e.getHand() != null && e.getHand().equals(EquipmentSlot.OFF_HAND)) return;
 
-        var hand = p.getInventory().getItemInMainHand();
+        @NotNull ItemStack hand = p.getInventory().getItemInMainHand();
         if ((e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK))
                 && !ItemUtil.isNull(hand)) {
-            var nbt = CompoundTag.of(hand);
-            var tag = nbt.get("tag", CompoundTag.class);
+            CompoundTag nbt = CompoundTag.of(hand);
+            @Nullable CompoundTag tag = nbt.get("tag", CompoundTag.class);
             if (tag != null){
-                var pack = tag.get("packit", ListTag.class);
+                @Nullable ListTag pack = tag.get("packit", ListTag.class);
                 if(pack != null) {
                     e.setCancelled(true);
                     if (p.hasPermission("packit.use")) {
