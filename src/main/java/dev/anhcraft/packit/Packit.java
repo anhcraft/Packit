@@ -39,7 +39,7 @@ public final class Packit extends JavaPlugin implements CommandExecutor, Listene
                             .message(sender, "&f/packit pack: pack the item in hand")
                             .message(sender, "&f/packit unpack: unpack the item in hand")
                             .message(sender, "&f/packit editor: open the editor")
-                            .message(sender, "&f/packit scan: scan the pack in hand")
+                            .message(sender, "&f/packit scan: scan the package in hand")
                             .message(sender, "&aAliases: /pi, /pack");
                 } else if(args[0].equals("pack")){
                     ItemStack hand = p.getInventory().getItemInMainHand();
